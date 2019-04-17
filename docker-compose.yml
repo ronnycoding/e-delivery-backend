@@ -1,0 +1,59 @@
+version: '3.1'
+services:
+  traefik:
+    container_name: ${DOMAIN}-traefik
+    image: traefik
+    command: --web --docker --docker.domain=${DOMAIN}.localhost --logLevel=DEBUG
+    ports:
+      - 82:80
+      - 448:443
+      # - 1338:1337
+      # - 8081:8080
+      # - 6380:6379
+      # - 1027:1025
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/null:/traefik.toml
+  # database:
+  #   container_name: ${DOMAIN}-database
+  #   image: postgres:10.7
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: ${DATABASE_USERNAME}
+  #     POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+  #     POSTGRES_DB: ${DATABASE_NAME}
+  #   labels:
+  #     - 'traefik.enable=false'
+  #   volumes:
+  #     - ./db-data/:/var/lib/postgresql/data
+  # adminer:
+  #   container_name: ${DOMAIN}-adminer
+  #   image: adminer
+  #   restart: always
+  #   links:
+  #     - database
+  #   labels:
+  #     - "traefik.backend=adminer-${DOMAIN}"
+  #     - "traefik.frontend.rule=Host:adminer.${DOMAIN}.localhost"
+  #     - "traefik.port=8080"
+  app:
+    container_name: ${DOMAIN}-app
+    env_file: .env
+    # build: .
+    image: ronnf89/edelivery
+    volumes:
+      - /var/www/app/node_modules
+      - .:/var/www/app
+    # depends_on:
+    #   - database
+    # environment:
+    #   NODE_ENV: ${NODE_ENV}
+    #   DATABASE_HOST: ${DATABASE_HOST}
+    #   DATABASE_NAME: ${DATABASE_NAME}
+    #   DATABASE_USERNAME: ${DATABASE_USERNAME}
+    #   DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+    #   DATABASE_PORT: ${DATABASE_PORT}
+    labels:
+      - 'traefik.backend=app-${DOMAIN}'
+      - 'traefik.frontend.rule=Host:app.${DOMAIN}.localhost'
+      - 'traefik.port=1337'
